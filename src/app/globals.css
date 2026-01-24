@@ -1,0 +1,52 @@
+@import "tailwindcss";
+@plugin "@tailwindcss/typography";
+
+:root {
+  --background: #282a36;
+  --current-line: #44475a;
+  --foreground: #f8f8f2;
+  --comment: #6272a4;
+  --cyan: #8be9fd;
+  --green: #50fa7b;
+  --orange: #ffb86c;
+  --pink: #ff79c6;
+  --purple: #bd93f9;
+  --red: #ff5555;
+  --yellow: #f1fa8c;
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: 'Fira Code', 'Roboto Mono', monospace;
+}
+
+@layer utilities {
+  .text-neon-green {
+    color: var(--green);
+    text-shadow: 0 0 5px rgba(80, 250, 123, 0.5);
+  }
+  
+  .border-neon-purple {
+    border-color: var(--purple);
+    box-shadow: 0 0 5px rgba(189, 147, 249, 0.3);
+  }
+}
+
+/* Custom Scrollbar for that terminal feel */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--current-line); 
+}
+ 
+::-webkit-scrollbar-thumb {
+  background: var(--comment); 
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--purple); 
+}
