@@ -141,6 +141,7 @@ export const ArticleProvider = ({ children }: { children: ReactNode }) => {
   }
 
   const createArticle = async () => {
+    const parent = state.currentArticle;
     const newArt = {
       title: "New Article",
       description: "<p>Edit me...</p>",
@@ -150,15 +151,33 @@ export const ArticleProvider = ({ children }: { children: ReactNode }) => {
     try {
       const res = await axios.post('/api/articles', newArt);
       const savedArt = res.data;
+      
+      // 1. Add new article to local list
       dispatch({ type: 'SET_ARTICLES', payload: [...state.articles, savedArt] });
+
+      // 2. If we have a parent, link the new article to it
+      if (parent) {
+        const updatedParent = {
+          ...parent,
+          childs: [...parent.childs, { id: savedArt._id, type: 'LINK' as const }]
+        };
+        // Save parent update to DB
+        await axios.put(`/api/articles/${parent._id}`, updatedParent);
+        // Update parent in local state
+        dispatch({ type: 'UPDATE_ARTICLE_LOCAL', payload: updatedParent });
+      }
+
+      // 3. Switch to the new article in edit mode
       dispatch({ type: 'SET_CURRENT_ARTICLE', payload: savedArt });
       dispatch({ type: 'SET_VIEW_MODE', payload: false });
     } catch (err: any) {
       console.error("Failed to create article", err);
+      dispatch({ type: 'SET_ERROR', payload: 'Failed to create and link new article' });
     }
   };
 
   const deleteArticle = async (id: string) => {
+    if (!window.confirm("Are you sure you want to delete this article?")) return;
     try {
       await axios.delete(`/api/articles/${id}`);
       const newArticles = state.articles.filter(a => a._id !== id);
@@ -166,6 +185,7 @@ export const ArticleProvider = ({ children }: { children: ReactNode }) => {
       if (state.currentArticle?._id === id) {
         dispatch({ type: 'SET_CURRENT_ARTICLE', payload: newArticles[0] || null });
       }
+      alert("Article deleted.");
     } catch (err: any) {
       console.error("Failed to delete article", err);
     }

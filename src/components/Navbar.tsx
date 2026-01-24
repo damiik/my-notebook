@@ -25,6 +25,7 @@ const Navbar = () => {
     createArticle, 
     deleteArticle, 
     currentArticle,
+    updateArticle,
     addToStored,
     articles,
     selectArticle,
@@ -132,6 +133,18 @@ const Navbar = () => {
             <>
               {!viewMode ? (
                 <>
+                  <button 
+                    onClick={async () => {
+                      if (currentArticle) {
+                        await updateArticle(currentArticle);
+                        alert("Article saved successfully!");
+                      }
+                    }} 
+                    className="flex items-center gap-2 text-green hover:text-white transition-colors uppercase font-bold text-xs"
+                    title="Save Article"
+                  >
+                    <Edit size={16} className="text-dracula-yellow" /> <span className="hidden sm:inline">Save</span>
+                  </button>
                   <button 
                     onClick={createArticle} 
                     className="flex items-center gap-2 text-green hover:text-white transition-colors uppercase font-bold text-xs"
