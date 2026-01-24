@@ -15,23 +15,22 @@ const Navigator = () => {
   );
 
   return (
-    <div className="bg-[#282a36] border-b border-comment p-2 flex items-center gap-2 overflow-x-auto whitespace-nowrap">
-      <span className="text-comment font-mono text-xs mr-2">PARENTS:</span>
+    <div className="bg-[#282a36] border-b border-comment px-4 flex items-center gap-2 overflow-x-auto whitespace-nowrap h-[37px]">
       {parents.length === 0 && <span className="text-comment text-xs italic">root</span>}
       
       {parents.map(p => (
         <button 
             key={p._id}
             onClick={() => selectArticle(p._id)}
-            className="px-2 py-1 bg-current-line rounded text-xs font-mono hover:bg-purple hover:text-black transition-colors"
+            className="px-2 py-0.5 rounded text-sm font-mono border border-[#3465A4] text-[#1D8D85] hover:text-[#CABE4B] transition-colors"
         >
             {p.title}
         </button>
       ))}
       
-      <ArrowRight size={14} className="text-yellow mx-2" />
+      <ArrowRight size={14} className="text-[#4AC74D] mx-2" />
       
-      <span className="font-bold text-green font-mono text-sm px-2 border border-green rounded">
+      <span className="font-bold text-[#1D8D85] font-mono text-sm px-2 border border-[#3465A4] rounded">
         {currentArticle.title}
       </span>
     </div>

@@ -18,7 +18,17 @@
 body {
   background-color: var(--background);
   color: var(--foreground);
-  font-family: 'Fira Code', 'Roboto Mono', monospace;
+  font-family: var(--font-geist-mono), monospace;
+}
+
+.article-content {
+  font-family: var(--font-crete-round), serif;
+  font-size: 22px;
+  line-height: 1.4;
+}
+
+.article-content .prose {
+  font-family: inherit;
 }
 
 @layer utilities {

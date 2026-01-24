@@ -70,7 +70,7 @@ const Sidebar = () => {
           <>
             {childs.length === 0 && <div className="text-comment italic p-2">No child articles.</div>}
             {childs.map((item) => (
-              <div key={item.id} className="group relative bg-[#282a36] p-2 rounded border border-comment hover:border-cyan transition-all">
+              <div key={item.id} className="group relative bg-[#282a36] p-2 rounded border border-[#D57E31] hover:border-cyan transition-all">
                 <div className="flex justify-between items-center mb-1">
                     <span className="text-xs text-comment uppercase tracking-wider font-bold">
                         {item.type === 'PART' ? <FileText size={12} className="inline mr-1" /> : <LinkIcon size={12} className="inline mr-1" />}
@@ -85,7 +85,7 @@ const Sidebar = () => {
                 </div>
                 <button 
                     onClick={() => selectArticle(item.id)} 
-                    className="text-foreground hover:text-green w-full text-left font-mono truncate"
+                    className="text-[#ABA864] hover:text-[#CABE4B] w-full text-left font-mono truncate transition-colors"
                 >
                   {item.title}
                 </button>

@@ -59,13 +59,14 @@ const Navbar = () => {
   };
 
   return (
-    <nav className="bg-[#21222c] border-b border-purple p-3 flex flex-wrap justify-between items-center shadow-lg z-20 sticky top-0">
-      <div className="flex items-center gap-6">
+    <nav className="bg-[#58448a] border-b border-white/10 px-4 flex flex-nowrap justify-between items-center shadow-lg z-20 sticky top-0 h-[60px]">
+      <div className="flex items-center gap-4">
         <Link href="/" onClick={() => setViewMode(true)} className="flex items-center gap-2 group">
-          <div className="text-2xl font-bold font-mono text-foreground tracking-tighter group-hover:scale-105 transition-transform">
-              <span className="text-purple">&lt;</span>
-              <span className="text-green">MyNotebook</span>
-              <span className="text-purple">/&gt;</span>
+          <div className="text-2xl font-normal font-[family-name:var(--font-special-elite)] text-white tracking-tight group-hover:scale-105 transition-transform flex items-center gap-1">
+              <img width="32" height="32" src="/lambda-256x256x32.png" alt="logo" className="mr-1" />
+              <span className="opacity-70 text-base">&lt;</span>
+              <span>My Notebook</span>
+              <span className="opacity-70 text-base">/&gt;</span>
           </div>
         </Link>
 
@@ -84,7 +85,7 @@ const Navbar = () => {
           </div>
           
           {showResults && filteredArticles.length > 0 && (
-            <div className="absolute top-full left-0 right-0 mt-2 bg-dracula-current border border-dracula-comment rounded shadow-2xl overflow-hidden z-50">
+            <div className="absolute top-full left-0 right-0 mt-2 bg-[#2E3436] border border-dracula-comment rounded shadow-2xl overflow-hidden z-50">
               {filteredArticles.map(art => (
                 <button
                   key={art._id}

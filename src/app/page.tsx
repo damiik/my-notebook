@@ -41,7 +41,7 @@ export default function Home() {
           <Navigator />
 
           {/* Article View/Editor Container */}
-          <div className="flex-1 overflow-y-auto p-6 md:p-10">
+          <div className="flex-1 overflow-y-auto p-6 md:p-10 article-content">
             {viewMode ? (
               <ArticleView />
             ) : (
