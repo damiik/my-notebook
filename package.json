@@ -6,7 +6,12 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "migrate:add-tags": "tsx src/scripts/migrate-to-tags.ts",
+    "migrate:verify": "tsx src/scripts/verify-migration.ts",
+    "migrate:remove-childs": "tsx src/scripts/remove-childs-field.ts",
+    "migrate:system-tags": "tsx src/scripts/migrate-summary-to-system-tags.ts",
+    "migrate:copy-articles": "tsx src/scripts/copy-articles-to-current-day.ts"
   },
   "dependencies": {
     "@tinymce/tinymce-react": "^6.3.0",
@@ -36,6 +41,7 @@
     "eslint": "^9",
     "eslint-config-next": "16.1.4",
     "tailwindcss": "^4",
+    "tsx": "^4.21.0",
     "typescript": "^5"
   }
 }

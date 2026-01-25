@@ -7,10 +7,14 @@ export interface IChildArticle {
 
 export interface IArticleData {
   _id: string;
+  title: string;
+
+  // KLUCZOWA ZMIANA: Tags zamiast childs
+  tags: string[]; // IDs of parent topics/categories
+
   art_no?: number;
   shortname?: string;
   name?: string;
-  title: string;
   summary: string;
   description: string;
   write_list?: string[];
@@ -27,6 +31,7 @@ const ArticleSchema: Schema = new Schema({
   shortname: { type: String, default: '' },
   name: { type: String, default: '' },
   title: { type: String, required: true },
+  tags: { type: [String], default: [] }, // KLUCZOWA ZMIANA: Tags zamiast childs
   summary: { type: String, default: '' },
   description: { type: String, default: '' },
   write_list: { type: [String], default: [], required: false },
