@@ -25,53 +25,70 @@ const Sidebar = () => {
 
     if (!currentArticle) return null;
 
-  const articleTags = topics.filter(t => 
-    currentArticle.tags.includes(t._id)
-  );
+  const [activeTab, setActiveTab] = useState<'related' | 'stored'>('related');
 
-  const availableTags = topics.filter(t => 
-    !currentArticle.tags.includes(t._id)
-  );
-  
-  const [activeTab, setActiveTab] = useState<'childs' | 'stored'>('childs');
-
-  const childs = currentArticle?.childs.map(child => {
-    const art = articles.find(a => a._id === child.id);
-    return { ...child, title: art?.title || 'Unknown', _id: child.id };
-  }) || [];
+  // ⭐ KLUCZOWA ZMIANA: Znajdź "dzieci" (artykuły które mają currentArticle w swoich tags)
+  // zamiast pobierać z currentArticle.childs
+  const relatedArticles = articles.filter(art => 
+    art.tags?.includes(currentArticle._id.toString()) && art._id !== currentArticle._id
+  ).map(art => ({
+    id: art._id,
+    title: art.title,
+    type: 'LINK' as const // W nowym modelu typ zawsze będzie LINK (PARTy obsługiwane inaczej)
+  }));
 
   const stored = storedArticles.map(id => {
     const art = articles.find(a => a._id === id);
     return { _id: id, title: art?.title || 'Unknown' };
   });
 
-  const handleRemoveChild = (id: string) => {
+  // ⭐ ZMIANA: Usuwanie "dziecka" = usunięcie tagu z artykułu-dziecka
+  const handleRemoveRelated = async (childId: string) => {
       if(!currentArticle) return;
-      const newChilds = currentArticle.childs.filter(c => c.id !== id);
-      updateArticle({ ...currentArticle, childs: newChilds });
+    
+    const childArticle = articles.find(a => a._id === childId);
+    if(!childArticle) return;
+
+    // Usuń ID rodzica z tags dziecka
+    const updatedChild = {
+      ...childArticle,
+      tags: childArticle.tags.filter(t => t !== currentArticle._id.toString())
+    };
+    
+    await updateArticle(updatedChild);
   };
 
-  const handleAddChildFromStored = (id: string) => {
+  // ⭐ ZMIANA: Dodanie z Stored = dodanie tagu do artykułu ze Store
+  const handleAddFromStored = async (storedId: string) => {
       if(!currentArticle) return;
-      if(currentArticle.childs.find(c => c.id === id)) return; // Already exists
-      const newChilds = [...currentArticle.childs, { id, type: 'LINK' as const }];
-      updateArticle({ ...currentArticle, childs: newChilds });
+    
+    const storedArticle = articles.find(a => a._id === storedId);
+    if(!storedArticle) return;
+    
+    // Sprawdź czy już nie ma tego tagu
+    if(storedArticle.tags?.includes(currentArticle._id.toString())) return;
+
+    const updatedStored = {
+      ...storedArticle,
+      tags: [...(storedArticle.tags || []), currentArticle._id.toString()]
+    };
+    
+    await updateArticle(updatedStored);
   }
 
   return (
     <aside className="w-80 bg-[#21222c] border-r border-neon-purple flex flex-col h-full text-sm">
-      {/* USUNIĘTA SEKCJA TAGÓW (była tutaj) */}
       
       {/* Zakładki bez zmian */}
       <div className="flex border-b border-comment">
         <button
-          onClick={() => setActiveTab('childs')}
+          onClick={() => setActiveTab('related')}
           className={clsx(
             "flex-1 p-2 font-bold transition-colors",
-            activeTab === 'childs' ? "bg-current-line text-cyan" : "hover:bg-current-line text-comment"
+            activeTab === 'related' ? "bg-current-line text-cyan" : "hover:bg-current-line text-comment"
           )}
         >
-          Related
+          Related ({relatedArticles.length})
         </button>
         <button
           onClick={() => setActiveTab('stored')}
@@ -85,20 +102,22 @@ const Sidebar = () => {
       </div>
 
       <div className="flex-1 overflow-y-auto p-2 space-y-2">
-        {activeTab === 'childs' && (
+        {activeTab === 'related' && (
           <>
-            {childs.length === 0 && <div className="text-comment italic p-2">No child articles.</div>}
-            {childs.map((item) => (
+            {relatedArticles.length === 0 && <div className="text-comment italic p-2">No related articles.</div>}
+            {relatedArticles.map((item) => (
               <div key={item.id} className="group relative bg-[#282a36] p-2 rounded border border-[#D57E31] hover:border-cyan transition-all">
                 <div className="flex justify-between items-center mb-1">
                     <span className="text-xs text-comment uppercase tracking-wider font-bold">
-                        {item.type === 'PART' ? <FileText size={12} className="inline mr-1" /> : <LinkIcon size={12} className="inline mr-1" />}
-                        {item.type}
+                        <LinkIcon size={12} className="inline mr-1" />
+                        LINK
                     </span>
                     {!viewMode && (
                         <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                              <button onClick={() => addToStored(item.id)} title="Add to Store"><Archive size={14} className="text-orange" /></button>
-                             <button onClick={() => handleRemoveChild(item.id)} title="Remove connection"><X size={14} className="text-red" /></button>
+                             <button onClick={() => handleRemoveRelated(item.id)} title="Unlink from current">
+                               <X size={14} className="text-red" />
+                             </button>
                         </div>
                     )}
                 </div>
@@ -127,7 +146,9 @@ const Sidebar = () => {
                     </button>
                     <div className="flex gap-1">
                         {!viewMode && (
-                            <button onClick={() => handleAddChildFromStored(item._id)} title="Link to current"><CornerDownRight size={14} className="text-green" /></button>
+                            <button onClick={() => handleAddFromStored(item._id)} title="Link to current">
+                              <CornerDownRight size={14} className="text-green" />
+                            </button>
                         )}
                         <button onClick={() => removeFromStored(item._id)}><X size={14} className="text-red" /></button>
                     </div>

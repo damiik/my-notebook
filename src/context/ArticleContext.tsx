@@ -2,13 +2,16 @@
 
 import React, { createContext, useContext, useReducer, useEffect, ReactNode } from 'react';
 import { IArticleData } from '@/models/Article';
+import { ITopicData } from '@/models/Topic';
 import AuthContext from './AuthContext';
 import axios from 'axios';
 
 // --- Types ---
 interface ArticleState {
   articles: IArticleData[];
+  topics: ITopicData[];
   currentArticle: IArticleData | null;
+  currentTopicId: string | null;
   storedArticles: string[]; // IDs of stored articles
   viewMode: boolean; // true = View, false = Edit
   loading: boolean;
@@ -16,7 +19,8 @@ interface ArticleState {
 }
 
 type Action =
-  | { type: 'SET_ARTICLES'; payload: IArticleData[] }
+  | { type: 'SET_ARTICLES'; payload: IArticleData[]}
+  | { type: 'SELECT_TOPIC'; id: string }
   | { type: 'SET_CURRENT_ARTICLE'; payload: IArticleData | null }
   | { type: 'SET_LOADING'; payload: boolean }
   | { type: 'SET_ERROR'; payload: string }
@@ -25,12 +29,14 @@ type Action =
   | { type: 'ADD_STORED'; payload: string }
   | { type: 'REMOVE_STORED'; payload: string }
   | { type: 'UPDATE_ARTICLE_LOCAL'; payload: IArticleData }
-  | { type: 'INIT_APPLICATION'; payload: IArticleData[] };
+  | { type: 'INIT_APPLICATION'; payload: IArticleData[];  topics: ITopicData[]  };
 
 // --- Initial State ---
 const initialState: ArticleState = {
   articles: [],
+  topics: [],
   currentArticle: null,
+  currentTopicId: null,
   storedArticles: [],
   viewMode: true,
   loading: false,
@@ -60,6 +66,7 @@ const articleReducer = (state: ArticleState, action: Action): ArticleState => {
       return {
         ...state,
         articles: allArticles,
+        topics: action.topics,
         currentArticle: state.currentArticle 
           ? (allArticles.find(a => a._id === state.currentArticle?._id) || main || allArticles[0] || null)
           : (main || allArticles[0] || null),
@@ -71,6 +78,8 @@ const articleReducer = (state: ArticleState, action: Action): ArticleState => {
       return { ...state, articles: action.payload, loading: false };
     case 'SET_CURRENT_ARTICLE':
       return { ...state, currentArticle: action.payload };
+    case 'SELECT_TOPIC':
+      return { ...state, currentTopicId: action.id };      
     case 'SET_LOADING':
       return { ...state, loading: action.payload };
     case 'SET_ERROR':
@@ -97,6 +106,11 @@ const articleReducer = (state: ArticleState, action: Action): ArticleState => {
 
 // --- Context ---
 interface ArticleContextType extends ArticleState {
+  // Computed values
+  currentArticle: IArticleData | null;
+  currentTopic: ITopicData | null;
+  // currentTopicArticles: IArticleData[];
+
   fetchArticles: () => Promise<void>;
   selectArticle: (id: string) => void;
   toggleViewMode: () => void;
@@ -106,6 +120,8 @@ interface ArticleContextType extends ArticleState {
   updateArticle: (article: IArticleData) => Promise<void>;
   createArticle: () => Promise<void>;
   deleteArticle: (id: string) => Promise<void>;
+  addTagToArticle: (articleId: string, tagId: string) => Promise<void>;
+  removeTagFromArticle: (articleId: string, tagId: string) => Promise<void>;
 }
 
 const ArticleContext = createContext<ArticleContextType | undefined>(undefined);
@@ -118,7 +134,8 @@ export const ArticleProvider = ({ children }: { children: ReactNode }) => {
     dispatch({ type: 'SET_LOADING', payload: true });
     try {
       const res = await axios.get('/api/articles');
-      dispatch({ type: 'INIT_APPLICATION', payload: res.data });
+      const topicsRes = await axios.get('/api/topics');
+      dispatch({ type: 'INIT_APPLICATION', payload: res.data, topics: topicsRes.data });
     } catch (err: any) {
       dispatch({ type: 'SET_ERROR', payload: err.response?.data?.error || 'Failed to fetch articles' });
     }
@@ -129,6 +146,8 @@ export const ArticleProvider = ({ children }: { children: ReactNode }) => {
     if (article) dispatch({ type: 'SET_CURRENT_ARTICLE', payload: article });
   };
 
+  const currentTopic = state.topics.find(t => t._id === state.currentTopicId) || null;
+  
   const updateArticle = async (article: IArticleData) => {
     if (!article || !article._id) return;
     dispatch({ type: 'UPDATE_ARTICLE_LOCAL', payload: article });
@@ -142,37 +161,33 @@ export const ArticleProvider = ({ children }: { children: ReactNode }) => {
 
   const createArticle = async () => {
     const parent = state.currentArticle;
+    
+    // Przygotuj nowy artykuł z tagiem wskazującym na rodzica
     const newArt = {
       title: "New Article",
       description: "<p>Edit me...</p>",
       summary: "",
-      childs: []
+      tags: parent ? [parent._id.toString()] : [], // ⭐ KLUCZOWA ZMIANA: tag zamiast childs
+      childs: [] // Zachowujemy dla PARTów lub wstecznej kompatybilności
     };
+    
     try {
       const res = await axios.post('/api/articles', newArt);
       const savedArt = res.data;
       
-      // 1. Add new article to local list
+      // 1. Dodaj do lokalnej listy artykułów
       dispatch({ type: 'SET_ARTICLES', payload: [...state.articles, savedArt] });
 
-      // 2. If we have a parent, link the new article to it
-      if (parent) {
-        const updatedParent = {
-          ...parent,
-          childs: [...parent.childs, { id: savedArt._id, type: 'LINK' as const }]
-        };
-        // Save parent update to DB
-        await axios.put(`/api/articles/${parent._id}`, updatedParent);
-        // Update parent in local state
-        dispatch({ type: 'UPDATE_ARTICLE_LOCAL', payload: updatedParent });
-      }
-
-      // 3. Switch to the new article in edit mode
+      // 2. ⭐ USUNIĘTE: Nie aktualizujemy już childs rodzica
+      // Relacja jest teraz przechowywana w tags dziecka (savedArt)
+      
+      // 3. Przełącz na nowy artykuł w trybie edycji
       dispatch({ type: 'SET_CURRENT_ARTICLE', payload: savedArt });
       dispatch({ type: 'SET_VIEW_MODE', payload: false });
+      
     } catch (err: any) {
       console.error("Failed to create article", err);
-      dispatch({ type: 'SET_ERROR', payload: 'Failed to create and link new article' });
+      dispatch({ type: 'SET_ERROR', payload: 'Failed to create new article' });
     }
   };
 
@@ -191,6 +206,30 @@ export const ArticleProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  const addTagToArticle = async (articleId: string, tagId: string) => {
+    const article = state.articles.find(a => a._id === articleId);
+    if (!article) return;
+    
+    const updatedArticle = {
+      ...article,
+      tags: [...new Set([...article.tags, tagId])], // Prevent duplicates
+    };
+    
+    await updateArticle(updatedArticle);
+  };
+
+  const removeTagFromArticle = async (articleId: string, tagId: string) => {
+    const article = state.articles.find(a => a._id === articleId);
+    if (!article) return;
+    
+    const updatedArticle = {
+      ...article,
+      tags: article.tags.filter(t => t !== tagId),
+    };
+    
+    await updateArticle(updatedArticle);
+  };
+
   useEffect(() => {
     fetchArticles();
   }, [isAuthenticated]);
@@ -206,7 +245,10 @@ export const ArticleProvider = ({ children }: { children: ReactNode }) => {
       removeFromStored: (id) => dispatch({ type: 'REMOVE_STORED', payload: id }),
       updateArticle,
       createArticle,
-      deleteArticle
+      deleteArticle,
+      currentTopic,
+      addTagToArticle,
+      removeTagFromArticle,
     }}>
       {children}
     </ArticleContext.Provider>
