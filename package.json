@@ -11,7 +11,9 @@
     "migrate:verify": "tsx src/scripts/verify-migration.ts",
     "migrate:remove-childs": "tsx src/scripts/remove-childs-field.ts",
     "migrate:system-tags": "tsx src/scripts/migrate-summary-to-system-tags.ts",
-    "migrate:copy-articles": "tsx src/scripts/copy-articles-to-current-day.ts"
+    "migrate:copy-articles": "tsx src/scripts/copy-articles-to-current-day.ts",
+    "migrate:childs-to-tags": "tsx src/scripts/migrate-childs-to-tags.ts",
+    "migrate:clear-tags": "tsx src/scripts/clear-all-tags.ts"
   },
   "dependencies": {
     "@tinymce/tinymce-react": "^6.3.0",
