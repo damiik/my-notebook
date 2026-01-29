@@ -2,6 +2,8 @@
 
 import React, { useState } from 'react';
 import { useArticle } from '@/context/ArticleContext';
+import { Tag, Plus } from 'lucide-react';
+
 import { Archive, X, ArrowRight, CornerDownRight, Link as LinkIcon, FileText } from 'lucide-react';
 import clsx from 'clsx';
 
@@ -14,8 +16,22 @@ const Sidebar = () => {
     selectArticle, 
     removeFromStored, 
     addToStored,
-    updateArticle
+    updateArticle,
+    topics,
+
+    addTagToArticle,
+    removeTagFromArticle,
   } = useArticle();
+
+    if (!currentArticle) return null;
+
+  const articleTags = topics.filter(t => 
+    currentArticle.tags.includes(t._id)
+  );
+
+  const availableTags = topics.filter(t => 
+    !currentArticle.tags.includes(t._id)
+  );
   
   const [activeTab, setActiveTab] = useState<'childs' | 'stored'>('childs');
 
@@ -44,6 +60,9 @@ const Sidebar = () => {
 
   return (
     <aside className="w-80 bg-[#21222c] border-r border-neon-purple flex flex-col h-full text-sm">
+      {/* USUNIĘTA SEKCJA TAGÓW (była tutaj) */}
+      
+      {/* Zakładki bez zmian */}
       <div className="flex border-b border-comment">
         <button
           onClick={() => setActiveTab('childs')}
