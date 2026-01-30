@@ -21,6 +21,11 @@ const ArticleEditor = () => {
 
   if (!currentArticle) return null;
 
+  // ⭐ ZMIANA: Używamy parts zamiast childs
+  const partArticles = (currentArticle.parts || [])
+    .map(partId => articles.find(a => a._id === partId))
+    .filter(Boolean);
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
@@ -107,21 +112,17 @@ const ArticleEditor = () => {
 
       {/* Render PART children inline just like legacy application */}
       <div className="flex flex-col gap-6 mt-8 pb-20">
-        {currentArticle.childs.filter(c => c.type === 'PART').map(child => {
-          const childArt = articles.find(a => a._id === child.id);
-          if (!childArt) return null;
-          return (
-            <div key={child.id} className="p-6 bg-[#1e1e1e] border border-comment rounded-lg relative opacity-80">
+        {partArticles.map(childArt => (
+          <div key={childArt!._id} className="p-6 bg-[#1e1e1e] border border-comment rounded-lg relative opacity-80">
               <div className="absolute -top-3 left-4 bg-[#1e1e1e] px-2 text-xs text-comment font-bold border border-comment rounded uppercase">
-                Sub-Article (Part): {childArt.title}
+              Sub-Article (Part): {childArt!.title}
               </div>
               <div 
                 className="prose prose-invert max-w-none prose-sm"
-                dangerouslySetInnerHTML={{ __html: childArt.description }} 
+              dangerouslySetInnerHTML={{ __html: childArt!.description }} 
               />
             </div>
-          );
-        })}
+        ))}
       </div>
     </div>
   );

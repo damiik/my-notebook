@@ -141,9 +141,60 @@ export const ArticleProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const selectArticle = (id: string) => {
+  const selectArticle = async (id: string) => {
     const article = state.articles.find(a => a._id === id);
-    if (article) dispatch({ type: 'SET_CURRENT_ARTICLE', payload: article });
+    if (article) {
+      dispatch({ type: 'SET_CURRENT_ARTICLE', payload: article });
+      
+      // ⭐ NOWA LOGIKA: Wejście do #unassigned = adopcja osieroconych artykułów
+      if (article.summary === '#unassigned') {
+        const orphans = state.articles.filter(a => 
+          a._id !== article._id && 
+          (!a.tags || a.tags.length === 0) &&
+          !a.summary?.includes('#main') &&  // Nie przenoś maina
+          !a.summary?.includes('#unassigned') // Nie przenoś samego siebie
+        );
+        
+        // Dodaj każdemu osieroconemu tag #unassigned
+        for (const orphan of orphans) {
+          if (!orphan.tags?.includes(article._id.toString())) {
+            const updated = {
+              ...orphan,
+              tags: [...(orphan.tags || []), article._id.toString()]
+            };
+            await updateArticle(updated);
+          }
+        }
+        
+        if (orphans.length > 0) {
+          console.log(`Assigned ${orphans.length} orphaned articles to #unassigned`);
+        }
+      }
+    }
+  };
+
+  const removeTagFromArticle = async (articleId: string, tagId: string) => {
+    const article = state.articles.find(a => a._id === articleId);
+    if (!article) return;
+    
+    let newTags = article.tags.filter(t => t !== tagId);
+    
+    // ⭐ FALLBACK: Jeśli usunęliśmy ostatni tag, dodaj #unassigned
+    if (newTags.length === 0) {
+      const unassigned = state.articles.find(a => a.summary === '#unassigned');
+      // Upewnij się że nie dodajemy samego do siebie i że artykuł #unassigned istnieje
+      if (unassigned && unassigned._id.toString() !== articleId) {
+        newTags.push(unassigned._id.toString());
+        console.log(`Article ${article.title} became orphaned, auto-assigned to #unassigned`);
+      }
+    }
+    
+    const updatedArticle = {
+      ...article,
+      tags: newTags,
+    };
+    
+    await updateArticle(updatedArticle);
   };
 
   const currentTopic = state.topics.find(t => t._id === state.currentTopicId) || null;
@@ -218,17 +269,6 @@ export const ArticleProvider = ({ children }: { children: ReactNode }) => {
     await updateArticle(updatedArticle);
   };
 
-  const removeTagFromArticle = async (articleId: string, tagId: string) => {
-    const article = state.articles.find(a => a._id === articleId);
-    if (!article) return;
-    
-    const updatedArticle = {
-      ...article,
-      tags: article.tags.filter(t => t !== tagId),
-    };
-    
-    await updateArticle(updatedArticle);
-  };
 
   useEffect(() => {
     fetchArticles();

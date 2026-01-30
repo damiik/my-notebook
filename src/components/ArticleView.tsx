@@ -21,15 +21,18 @@ const ArticleView = () => {
 
   if (!currentArticle) return <div className="p-10 text-comment">Select an article...</div>;
 
-  // Function to render child "PART"s recursively
+  // ⭐ ZMIANA: Używamy parts zamiast childs
   const renderChildParts = () => {
-      return currentArticle.childs.map((child) => {
-          if (child.type !== 'PART') return null;
-          const childArt = articles.find(a => a._id === child.id);
+      const partIds = currentArticle.parts || [];
+      
+      if (partIds.length === 0) return null;
+      
+      return partIds.map((partId) => {
+          const childArt = articles.find(a => a._id === partId);
           if(!childArt) return null;
 
           return (
-              <div key={child.id} className="mt-12 border-t border-dashed border-comment pt-6">
+              <div key={partId} className="mt-12 border-t border-dashed border-comment pt-6">
                   <div className="text-xs text-comment mb-4 font-mono uppercase tracking-widest bg-current-line w-fit px-2 rounded">
                     Included Part: {childArt.title}
                   </div>

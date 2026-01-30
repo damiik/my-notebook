@@ -1,3 +1,4 @@
+// models/Article.ts
 import mongoose, { Schema, Document, Model } from 'mongoose';
 
 export interface IChildArticle {
@@ -8,9 +9,8 @@ export interface IChildArticle {
 export interface IArticleData {
   _id: string;
   title: string;
-
-  // KLUCZOWA ZMIANA: Tags zamiast childs
   tags: string[]; // IDs of parent topics/categories
+  parts: string[]; // ⭐ NOWE: IDs of PART articles to embed
 
   art_no?: number;
   shortname?: string;
@@ -31,7 +31,8 @@ const ArticleSchema: Schema = new Schema({
   shortname: { type: String, default: '' },
   name: { type: String, default: '' },
   title: { type: String, required: true },
-  tags: { type: [String], default: [] }, // KLUCZOWA ZMIANA: Tags zamiast childs
+  tags: { type: [String], default: [] },
+  parts: { type: [String], default: [] }, // ⭐ NOWE POLE
   summary: { type: String, default: '' },
   description: { type: String, default: '' },
   write_list: { type: [String], default: [], required: false },
