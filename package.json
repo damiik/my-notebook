@@ -13,7 +13,8 @@
     "migrate:system-tags": "tsx src/scripts/migrate-summary-to-system-tags.ts",
     "migrate:copy-articles": "tsx src/scripts/copy-articles-to-current-day.ts",
     "migrate:childs-to-tags": "tsx src/scripts/migrate-childs-to-tags.ts",
-    "migrate:clear-tags": "tsx src/scripts/clear-all-tags.ts"
+    "migrate:clear-tags": "tsx src/scripts/clear-all-tags.ts",
+    "migrate:childs-to-parts": "tsx src/scripts/migrate-childs-to-parts.ts"
   },
   "dependencies": {
     "@tinymce/tinymce-react": "^6.3.0",
