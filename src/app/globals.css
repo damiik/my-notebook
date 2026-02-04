@@ -1,6 +1,19 @@
 @import "tailwindcss";
 @plugin "@tailwindcss/typography";
 
+/* 
+  W Tailwind v4 @theme jest zalecanym sposobem konfiguracji. 
+  Ignoruj ostrzeżenie VS Code "Unknown at rule @theme" - jest to błąd rozszerzenia CSS.
+*/
+@theme {
+  --font-mono: var(--font-mononoki), ui-monospace, monospace;
+  
+  --text-xs: 0.875rem;
+  --text-sm: 1rem;
+  --text-base: 1.125rem;
+  --text-lg: 1.25rem;
+}
+
 :root {
   --background: #282a36;
   --current-line: #44475a;
@@ -18,7 +31,9 @@
 body {
   background-color: var(--background);
   color: var(--foreground);
-  font-family: var(--font-geist-mono), monospace;
+  /* Czcionka i rozmiar tekstu (text-base = 18px) zarządzane przez Tailwind */
+  font-family: var(--font-mononoki), monospace;
+  font-size: 18px; 
 }
 
 .article-content {

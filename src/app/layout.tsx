@@ -1,17 +1,36 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono, Special_Elite, Crete_Round } from "next/font/google";
+import { Special_Elite, Crete_Round } from "next/font/google";
+import localFont from "next/font/local";
 import "./globals.css";
 import { ArticleProvider } from "@/context/ArticleContext";
 import { AuthProvider } from "@/context/AuthContext";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
+// Mononoki font configuration
+const mononoki = localFont({
+  src: [
+    {
+      path: "../../public/fonts/mononoki-Regular.otf",
+      weight: "400",
+      style: "normal",
+    },
+    {
+      path: "../../public/fonts/mononoki-Italic.otf",
+      weight: "400",
+      style: "italic",
+    },
+    {
+      path: "../../public/fonts/mononoki-Bold.otf",
+      weight: "700",
+      style: "normal",
+    },
+    {
+      path: "../../public/fonts/mononoki-BoldItalic.otf",
+      weight: "700",
+      style: "italic",
+    },
+  ],
+  variable: "--font-mononoki",
+  display: "swap",
 });
 
 const specialElite = Special_Elite({
@@ -40,7 +59,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} ${specialElite.variable} ${creteRound.variable} antialiased h-screen overflow-hidden`}
+        className={`${mononoki.variable} ${specialElite.variable} ${creteRound.variable} font-mono antialiased h-screen overflow-hidden`}
       >
         <AuthProvider>
           <ArticleProvider>

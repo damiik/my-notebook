@@ -161,7 +161,6 @@ const Sidebar = () => {
                 <div className="flex justify-between items-center mb-1">
                     <span className="text-xs text-comment uppercase tracking-wider font-bold">
                         <LinkIcon size={12} className="inline mr-1" />
-                        LINK
                     </span>
                     {!viewMode && (
                         <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -174,7 +173,7 @@ const Sidebar = () => {
                 </div>
                 <button 
                     onClick={() => selectArticle(item.id)} 
-                    className="text-[#ABA864] hover:text-[#CABE4B] w-full text-left font-mono truncate transition-colors"
+                    className="text-[#ABA864] hover:text-[#CABE4B] w-full text-left text-base font-mono truncate transition-colors"
                 >
                   {item.title}
                 </button>
@@ -212,7 +211,7 @@ const Sidebar = () => {
                 </div>
                 <button 
                     onClick={() => selectArticle(item.id)} 
-                    className="text-[#C792EA] hover:text-[#FF80BF] w-full text-left font-mono truncate transition-colors"
+                    className="text-[#C792EA] hover:text-[#FF80BF] w-full text-left font-mono text-base truncate transition-colors"
                 >
                   {item.title}
                 </button>
