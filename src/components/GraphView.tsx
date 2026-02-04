@@ -123,7 +123,7 @@ const GraphView = () => {
 
     // Renderowanie węzłów
     const node = g.append("g")
-      .selectAll("g")
+      .selectAll<SVGGElement, NodeDatum>("g")
       .data(nodes)
       .join("g")
       .call(d3.drag<SVGGElement, NodeDatum>()
