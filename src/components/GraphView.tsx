@@ -90,21 +90,6 @@ const GraphView = () => {
       .attr("width", width)
       .attr("height", height);
 
-    // Definicje markerów (strzałek)
-    svg.append("defs").selectAll("marker")
-      .data(["parent", "part"])
-      .join("marker")
-      .attr("id", d => `arrow-${d}`)
-      .attr("viewBox", "0 -5 10 10")
-      .attr("refX", 20) // Zwiększone, aby strzałka nie chowała się pod mniejszym kółkiem
-      .attr("refY", -1)
-      .attr("markerWidth", 6)
-      .attr("markerHeight", 6)
-      .attr("orient", "auto")
-      .append("path")
-      .attr("fill", d => d === 'part' ? "#C792EA" : "#6272a4")
-      .attr("d", "M0,-5L10,0L0,5");
-
     // Dodaj zoom
     const g = svg.append("g");
     
@@ -125,17 +110,23 @@ const GraphView = () => {
       .force("center", d3.forceCenter(width / 2, height / 2))
       .force("collision", d3.forceCollide().radius(60));
 
-    // Renderowanie linków (jako ścieżki łukowe)
-    const link = g.append("g")
-      .attr("fill", "none")
-      .attr("stroke-opacity", 0.6)
-      .selectAll("path")
+    // Renderowanie linków (grupy zawierające ścieżkę i strzałkę)
+    const linkGroup = g.append("g")
+      .selectAll("g")
       .data(links)
-      .join("path")
+      .join("g")
+      .attr("stroke-opacity", 0.6);
+
+    const linkPath = linkGroup.append("path")
+      .attr("fill", "none")
       .attr("stroke-width", d => d.type === 'part' ? 2 : 1.5)
       .attr("stroke", d => d.type === 'part' ? "#C792EA" : "#6272a4")
-      .attr("stroke-dasharray", d => d.type === 'part' ? "5,5" : null)
-      .attr("marker-end", d => `url(#arrow-${d.type})`);
+      .attr("stroke-dasharray", d => d.type === 'part' ? "5,5" : null);
+
+    const linkArrow = linkGroup.append("path")
+      .attr("fill", d => d.type === 'part' ? "#C792EA" : "#6272a4")
+      .attr("stroke", "none")
+      .attr("d", "M-10,-5 L0,0 L-10,5 Z");
 
     // Renderowanie węzłów
     const node = g.append("g")
@@ -185,20 +176,64 @@ const GraphView = () => {
       setViewMode(true);
     });
 
-    // Funkcja obliczająca ścieżkę łuku
-    function linkArc(d: LinkDatum) {
-      const source = d.source as NodeDatum;
-      const target = d.target as NodeDatum;
-      const r = Math.hypot(target.x! - source.x!, target.y! - source.y!);
-      return `
-        M${source.x},${source.y}
-        A${r},${r} 0 0,1 ${target.x},${target.y}
-      `;
-    }
-
     // Aktualizacja pozycji
     simulation.on("tick", () => {
-      link.attr("d", linkArc);
+      linkGroup.each(function(d) {
+        const source = d.source as NodeDatum;
+        const target = d.target as NodeDatum;
+        const x0 = source.x!, y0 = source.y!, x1 = target.x!, y1 = target.y!;
+        const dx = x1 - x0;
+        const dy = y1 - y0;
+
+        const r = target.isMain ? 10 : target.isUnassigned ? 8 : 6;
+        const arrowLen = 10;
+
+        // Formula for epsilon to reach distance D from t=1 (approx)
+        const getEpsilon = (D: number) => {
+          if (Math.abs(dx) < 0.1 && Math.abs(dy) < 0.1) return 0.1;
+          const a = 9 * dy * dy;
+          const b = 2.25 * dx * dx;
+          if (a < 1e-6) return D / Math.sqrt(b);
+          const u = (-b + Math.sqrt(b * b + 4 * a * D * D)) / (2 * a);
+          return Math.sqrt(u);
+        };
+
+        const eEnd = Math.min(getEpsilon(r), 0.5);
+        const eBack = Math.min(getEpsilon(r + arrowLen), 0.6);
+
+        const tEnd = 1 - eEnd;
+        const tBack = 1 - eBack;
+
+        const p0x = x0, p0y = y0;
+        const p1x = (x0 + x1) / 2, p1y = y0;
+        const p2x = (x0 + x1) / 2, p2y = y1;
+        const p3x = x1, p3y = y1;
+
+        const evalBezier = (t: number) => {
+          const mt = 1 - t;
+          return {
+            x: mt*mt*mt*p0x + 3*mt*mt*t*p1x + 3*mt*t*t*p2x + t*t*t*p3x,
+            y: mt*mt*mt*p0y + 3*mt*mt*t*p1y + 3*mt*t*t*p2y + t*t*t*p3y
+          };
+        };
+
+        const pEnd = evalBezier(tEnd);
+        const pBack = evalBezier(tBack);
+
+        const angle = Math.atan2(pEnd.y - pBack.y, pEnd.x - pBack.x) * 180 / Math.PI;
+
+        // De Casteljau for shortened path (0 to tEnd)
+        const q0x = (1-tEnd)*p0x + tEnd*p1x, q0y = (1-tEnd)*p0y + tEnd*p1y;
+        const q1x = (1-tEnd)*p1x + tEnd*p2x, q1y = (1-tEnd)*p1y + tEnd*p2y;
+        const r0x = (1-tEnd)*q0x + tEnd*q1x, r0y = (1-tEnd)*q0y + tEnd*q1y;
+
+        const dPath = `M${p0x},${p0y} C${q0x},${q0y} ${r0x},${r0y} ${pEnd.x},${pEnd.y}`;
+        const arrowTransform = `translate(${pEnd.x},${pEnd.y}) rotate(${angle})`;
+
+        const gEl = d3.select(this);
+        gEl.select("path:nth-child(1)").attr("d", dPath);
+        gEl.select("path:nth-child(2)").attr("transform", arrowTransform);
+      });
 
       node
         .attr("transform", d => `translate(${d.x},${d.y})`);
