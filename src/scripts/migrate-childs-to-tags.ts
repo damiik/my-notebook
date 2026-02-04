@@ -56,7 +56,7 @@ async function migrateChildsToTags() {
           skippedCount++;
         }
         
-      } catch (error) {
+      } catch (error: any) {
         console.error(`❌ Error processing child ${childId}:`, error.message);
       }
     }
@@ -69,7 +69,7 @@ async function migrateChildsToTags() {
   process.exit(0);
 }
 
-migrateChildsToTags().catch(error => {
+migrateChildsToTags().catch((error: any) => {
   console.error('Migration failed:', error);
   process.exit(1);
 });
