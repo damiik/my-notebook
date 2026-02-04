@@ -69,7 +69,7 @@ const ArticleEditor = () => {
         />
       </div>
 
-      <div className="flex flex-col gap-1 min-h-[500px]">
+      <div className="flex flex-col gap-1 min-h-[1500px]">
         <label className="text-xs text-comment uppercase font-bold">Content</label>
         <Editor
           apiKey="gtuoq2ngfkffuxefdortijvau5unahsvr1lojb51qin1kl3c"
@@ -78,7 +78,7 @@ const ArticleEditor = () => {
           onEditorChange={handleEditorChange}
           onBlur={handleEditorBlur}
           init={{
-            height: 600,
+            height: 1500,
             menubar: "file edit insert view tools format",
             plugins: [
               'advlist', 'autolink', 'lists', 'link', 'image', 'charmap', 'preview', 'anchor',
