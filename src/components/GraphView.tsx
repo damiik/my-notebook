@@ -56,8 +56,8 @@ const GraphView = () => {
     articles.forEach(art => {
       art.tags?.forEach(parentId => {
         links.push({
-          source: art._id,
-          target: parentId,
+          source: parentId, // Parent as source
+          target: art._id,  // Child as target
           type: 'parent',
         });
       });
@@ -90,6 +90,21 @@ const GraphView = () => {
       .attr("width", width)
       .attr("height", height);
 
+    // Definicje markerów (strzałek)
+    svg.append("defs").selectAll("marker")
+      .data(["parent", "part"])
+      .join("marker")
+      .attr("id", d => `arrow-${d}`)
+      .attr("viewBox", "0 -5 10 10")
+      .attr("refX", 20) // Zwiększone, aby strzałka nie chowała się pod mniejszym kółkiem
+      .attr("refY", -1)
+      .attr("markerWidth", 6)
+      .attr("markerHeight", 6)
+      .attr("orient", "auto")
+      .append("path")
+      .attr("fill", d => d === 'part' ? "#C792EA" : "#6272a4")
+      .attr("d", "M0,-5L10,0L0,5");
+
     // Dodaj zoom
     const g = svg.append("g");
     
@@ -110,16 +125,17 @@ const GraphView = () => {
       .force("center", d3.forceCenter(width / 2, height / 2))
       .force("collision", d3.forceCollide().radius(60));
 
-    // Renderowanie linków
+    // Renderowanie linków (jako ścieżki łukowe)
     const link = g.append("g")
-      .attr("stroke", "#999")
+      .attr("fill", "none")
       .attr("stroke-opacity", 0.6)
-      .selectAll("line")
+      .selectAll("path")
       .data(links)
-      .join("line")
+      .join("path")
       .attr("stroke-width", d => d.type === 'part' ? 2 : 1.5)
       .attr("stroke", d => d.type === 'part' ? "#C792EA" : "#6272a4")
-      .attr("stroke-dasharray", d => d.type === 'part' ? "5,5" : null);
+      .attr("stroke-dasharray", d => d.type === 'part' ? "5,5" : null)
+      .attr("marker-end", d => `url(#arrow-${d.type})`);
 
     // Renderowanie węzłów
     const node = g.append("g")
@@ -131,9 +147,9 @@ const GraphView = () => {
         .on("drag", dragged)
         .on("end", dragended));
 
-    // Okręgi węzłów
+    // Okręgi węzłów (zmniejszone rozmiary)
     node.append("circle")
-      .attr("r", d => d.isMain ? 25 : d.isUnassigned ? 20 : 15)
+      .attr("r", d => d.isMain ? 10 : d.isUnassigned ? 8 : 6)
       .attr("fill", d => {
         if (d.isMain) return "#ff5555";
         if (d.isUnassigned) return "#ffb86c";
@@ -148,7 +164,7 @@ const GraphView = () => {
     node.append("text")
       .text(d => d.title)
       .attr("x", 0)
-      .attr("y", d => d.isMain ? 35 : d.isUnassigned ? 30 : 25)
+      .attr("y", d => d.isMain ? 20 : d.isUnassigned ? 18 : 16)
       .attr("text-anchor", "middle")
       .attr("fill", "#f8f8f2")
       .attr("font-size", "12px")
@@ -169,13 +185,20 @@ const GraphView = () => {
       setViewMode(true);
     });
 
+    // Funkcja obliczająca ścieżkę łuku
+    function linkArc(d: LinkDatum) {
+      const source = d.source as NodeDatum;
+      const target = d.target as NodeDatum;
+      const r = Math.hypot(target.x! - source.x!, target.y! - source.y!);
+      return `
+        M${source.x},${source.y}
+        A${r},${r} 0 0,1 ${target.x},${target.y}
+      `;
+    }
+
     // Aktualizacja pozycji
     simulation.on("tick", () => {
-      link
-        .attr("x1", d => (d.source as NodeDatum).x!)
-        .attr("y1", d => (d.source as NodeDatum).y!)
-        .attr("x2", d => (d.target as NodeDatum).x!)
-        .attr("y2", d => (d.target as NodeDatum).y!);
+      link.attr("d", linkArc);
 
       node
         .attr("transform", d => `translate(${d.x},${d.y})`);
